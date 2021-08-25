@@ -1,58 +1,74 @@
-
+import sys
 
 def parse(dimacs_file):
     """
     given:
         path to dimacs cnf file
     return:
-        formula, represented as list of list of ints
+        formula represented as map of clauses, a set of ints
     """
-    formula = []
-    clause = []
+    formula = dict()
+    clause = set()
+    clause_id = 1
     for line in open(dimacs_file):
         if not line:
             continue
         if line[0] in "cp":
             continue
         if not clause:
-            clause.extend([int(x) for x in line.split()])
-            if clause[-1] == 0:
-                clause.pop()
-                formula.append(clause)
-                clause = []
+            clause |= set(int(x) for x in line.split())
+            if 0 in clause:
+                clause.remove(0)
+                formula[clause_id] = clause
+                clause_id += 1
+                clause = set()
     return formula
 
 
 def get_units(formula):
     """
     given: 
-        formula: list of clauses
+        formula: map of clauses
     returns:
         set of unit literals
     """
-    units = []
-    for clause in formula:
+    units = set()
+    for clause in formula.values():
         if len(clause) == 1:
-            units.append(clause[0])
-    return set(units)
+            units |= clause
+    return units
 
+def is_consistent(units):
+    """
+    given:
+        units: set of unit literals
+    return:
+        true if consistent false if not
+    """
+    for lit in units:
+        if -lit in units:
+            return False
+    return True
+    
 
-def unit_propagation(formula, lit):
+def unit_propagation(formula, units):
     """
     given: 
-        formula and unit literal
+        formula: map of clauses
+        units: set of unit literals
     return: 
         modified formula based on unit propogation or formula with empty clause if conflict
     """
-    modified_formula = []
-    for clause in formula:
-        if lit in clause:
+    if not is_consistent(units):
+        return {0: set()}
+    neg_units = set(-x for x in units)
+    modified_formula = dict()
+    for clause_id, clause in formula.items():
+        if units & clause:
             continue
-        elif -lit in clause:
-            modified_clause = [x for x in clause if x != -lit]
-            modified_formula.append(modified_clause)
         else:
-            modified_formula.append(clause)
+            modified_clause = clause - neg_units
+            modified_formula[clause_id] = modified_clause
     return modified_formula
 
 
@@ -64,28 +80,28 @@ def get_pures(formula):
         set of pure literals
     """
     literals = set()
-    for clause in formula:
+    for clause in formula.values():
         literals |= set(clause)
-    pures = []
+    pures = set()
     for lit in literals:
         if -lit not in literals:
-            pures.append(lit)
-    return set(pures)
+            pures.add(lit)
+    return pures
 
 
-def pure_literal_elimination(formula, lit):
+def pure_literal_elimination(formula, pures):
     """
     given: 
         formula and pure literal
     return:
         modified formula based on pure literal elimination
     """
-    modified_formula = []
-    for clause in formula:
-        if lit in clause:
+    modified_formula = dict()
+    for clause_id, clause in formula.items():
+        if pures & clause:
             continue
         else:
-            modified_formula.append(clause)
+            modified_formula[clause_id] = clause
     return modified_formula
 
 
@@ -96,10 +112,21 @@ def choose_literal(formula):
     return:
         any literal from the formula or none if theres none
     """
-    for clause in formula:
+    for clause in formula.values():
         for lit in clause:
             return lit
     return None
+
+
+def is_sat(formula):
+    return len(formula) == 0
+
+
+def is_unsat(formula):
+    for clause in formula.values():
+        if len(clause) == 0:
+            return True
+    return False
 
 
 def dpll(formula):
@@ -109,26 +136,22 @@ def dpll(formula):
     return:
         true if the formula is satisfiable and false if unsatisfiable
     """
-    if formula == []:
+    if is_sat(formula):
         return True
-    elif [] in formula:
+    elif is_unsat(formula):
         return False
     # unit propagation
     units = get_units(formula)
-    # assignment.extend(list(units))
-    for lit in units:
-        formula = unit_propagation(formula, lit)
-    if formula == [[]]: 
+    formula = unit_propagation(formula, units)
+    if is_unsat(formula): 
         return False
     # pure literal elimination
     pures = get_pures(formula)
-    # assignment.extend(list(pures))
-    for lit in pures:
-        formula = pure_literal_elimination(formula, lit)
+    formula = pure_literal_elimination(formula, pures)
     # choose a literal
     lit = choose_literal(formula)
     if lit:
-        return dpll(formula+[[lit]]) or dpll(formula+[[-lit]])
+        return dpll({0:set([lit]), **formula}) or dpll({0:set([-lit]), **formula})
     return dpll(formula)
 
 if __name__ == "__main__":

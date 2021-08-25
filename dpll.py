@@ -5,7 +5,7 @@ def parse(dimacs_file):
     given:
         path to dimacs cnf file
     return:
-        formula, represented as list of list of ints
+        formula: represented as list of list of ints
     """
     formula = []
     clause = []
@@ -102,40 +102,40 @@ def choose_literal(formula):
     return None
 
 
-def dpll(formula):
+def dpll(formula, assignments):
     """
     given:
         formula
     return:
-        true if the formula is satisfiable and false if unsatisfiable
+        true and satisfiable assignment or false if unsatisfiable
     """
     if formula == []:
-        return True
+        return True, assignments
     elif [] in formula:
         return False
     # unit propagation
     units = get_units(formula)
-    # assignment.extend(list(units))
+    assignments |= units
     for lit in units:
         formula = unit_propagation(formula, lit)
     if formula == [[]]: 
         return False
     # pure literal elimination
     pures = get_pures(formula)
-    # assignment.extend(list(pures))
+    assignments |= pures
     for lit in pures:
         formula = pure_literal_elimination(formula, lit)
     # choose a literal
     lit = choose_literal(formula)
     if lit:
-        return dpll(formula+[[lit]]) or dpll(formula+[[-lit]])
-    return dpll(formula)
+        return dpll(formula+[[lit]], assignments | set([lit])) or dpll(formula+[[-lit]], assignments | set([-lit]))
+    return dpll(formula, assignments)
 
 if __name__ == "__main__":
     tests = [
         ("sat_aim-50-1_6-yes1-4.cnf", True),
-        ("sat_jgalenson.cnf", True),
         ("sat_quinn.cnf", True),
+        ("sat_jgalenson.cnf", True),
         ("sat_simple_v3_c2.cnf", True),
         ("sat_zebra_v155_c1135.cnf", True),
         ("unsat_aim-100-1_6-no-1.cnf", False),
@@ -147,4 +147,9 @@ if __name__ == "__main__":
     ]
     for (dimacs_file, sat) in tests:
         formula = parse("tests/" + dimacs_file)
-        print(dimacs_file, dpll(formula)) 
+        sat = dpll(formula, set())
+        if sat:
+            sat, assignment = sat
+            print(f"{dimacs_file}: {sat}\n\t{list(assignment)}\n")
+        else:
+            print(f"{dimacs_file}: {sat}\n")

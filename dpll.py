@@ -1,26 +1,9 @@
+import sys
+import utils
 
 
-def parse(dimacs_file):
-    """
-    given:
-        path to dimacs cnf file
-    return:
-        formula: represented as list of list of ints
-    """
-    formula = []
-    clause = []
-    for line in open(dimacs_file):
-        if not line:
-            continue
-        if line[0] in "cp":
-            continue
-        if not clause:
-            clause.extend([int(x) for x in line.split()])
-            if clause[-1] == 0:
-                clause.pop()
-                formula.append(clause)
-                clause = []
-    return formula
+SAT = True
+UNSAT = False
 
 
 def get_units(formula):
@@ -110,16 +93,16 @@ def dpll(formula, assignments):
         true and satisfiable assignment or false if unsatisfiable
     """
     if formula == []:
-        return True, assignments
+        return SAT, assignments
     elif [] in formula:
-        return False
+        return UNSAT
     # unit propagation
     units = get_units(formula)
     assignments |= units
     for lit in units:
         formula = unit_propagation(formula, lit)
     if formula == [[]]: 
-        return False
+        return UNSAT
     # pure literal elimination
     pures = get_pures(formula)
     assignments |= pures
@@ -133,20 +116,21 @@ def dpll(formula, assignments):
 
 if __name__ == "__main__":
     tests = [
-        ("sat_aim-50-1_6-yes1-4.cnf", True),
-        ("sat_quinn.cnf", True),
-        ("sat_jgalenson.cnf", True),
-        ("sat_simple_v3_c2.cnf", True),
-        ("sat_zebra_v155_c1135.cnf", True),
-        ("unsat_aim-100-1_6-no-1.cnf", False),
-        # ("unsat_bf0432-007.cnf", False),
-        ("unsat_dubois20.cnf", False),
-        ("unsat_dubois21.cnf", False),
-        ("unsat_dubois22.cnf", False),
-        ("unsat_hole6.cnf", False)
+        ("sat_aim-50-1_6-yes1-4.cnf", SAT),
+        ("sat_quinn.cnf", SAT),
+        ("sat_jgalenson.cnf", SAT),
+        ("sat_simple_v3_c2.cnf", SAT),
+        ("sat_sukrutrao.cnf", SAT),
+        ("sat_zebra_v155_c1135.cnf", SAT),
+        ("unsat_aim-100-1_6-no-1.cnf", UNSAT),
+        # ("unsat_bf0432-007.cnf", UNSAT),
+        ("unsat_dubois20.cnf", UNSAT),
+        ("unsat_dubois21.cnf", UNSAT),
+        ("unsat_dubois22.cnf", UNSAT),
+        ("unsat_hole6.cnf", UNSAT)
     ]
     for (dimacs_file, sat) in tests:
-        formula = parse("tests/" + dimacs_file)
+        formula = utils.parse("tests/" + dimacs_file)
         sat = dpll(formula, set())
         if sat:
             sat, assignment = sat

@@ -12,10 +12,14 @@ def parse(dimacs_file):
             continue
         if line[0] in "cp":
             continue
-        if not clause:
-            clause.extend([int(x) for x in line.split()])
-            if clause[-1] == 0:
-                clause.pop()
-                formula.append(clause)
-                clause = []
+        if int_line := (int(x) for x in line.split()):
+            for lit in int_line:
+                if lit == 0:
+                    if clause:
+                        formula.append(clause)
+                    clause = []
+                elif lit != 0:
+                    clause.append(lit)
+    if clause:
+        formula.append(clause)
     return formula

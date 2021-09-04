@@ -117,6 +117,7 @@ def dpll(formula, assignments):
 if __name__ == "__main__":
     tests = [
         ("sat_aim-50-1_6-yes1-4.cnf", SAT),
+        ("sat_choueiry.cnf", SAT),
         ("sat_quinn.cnf", SAT),
         ("sat_jgalenson.cnf", SAT),
         ("sat_simple_v3_c2.cnf", SAT),
@@ -127,7 +128,8 @@ if __name__ == "__main__":
         ("unsat_dubois20.cnf", UNSAT),
         ("unsat_dubois21.cnf", UNSAT),
         ("unsat_dubois22.cnf", UNSAT),
-        ("unsat_hole6.cnf", UNSAT)
+        ("unsat_hole6.cnf", UNSAT),
+        ("unsat_maf.cnf", UNSAT)
     ]
     for (dimacs_file, sat) in tests:
         formula = utils.parse("tests/" + dimacs_file)

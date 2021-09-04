@@ -64,7 +64,9 @@ def choose_literal(formula):
 def bcp(formula):
     """
     repeatedly apply unit propogation till either conflict or fix state
+    sh
     """
+    partial_trail = []
     units = get_units(formula)
     while units:
         if is_consistent(units):
@@ -78,10 +80,13 @@ def bcp(formula):
     return formula
 
 
-def analyze_conflict():
+def analyze_conflict(formula, trail):
     """
-    compute backtracking level, detect global unsatisfiability, and adding new constraints on search
+    compute backtracking level
+    detect global unsatisfiability
+    adding new constraints on search
     """
+     
     pass
 
 
@@ -93,15 +98,15 @@ def backtrack(level):
 
 
 def cdcl(formula):
-    level_map = {}
+    trail = []
     while True:
-        if bcp() == "CONFLICT":
-            level = analyze_conflict()
+        if bcp() == "CONFLICT":             # params?
+            level = analyze_conflict()      # params?
             if level < 0:
                 return UNSAT
-            backtrack(level)
-        elif bcp() != "CONFLICT":
-            lit = decide()
+            backtrack()                     # params?
+        elif bcp() != "CONFLICT":           # params?
+            lit = choose_literal(formula)
             if not lit:
                 return SAT
             formula = formula + [[lit]]

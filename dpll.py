@@ -93,7 +93,7 @@ def dpll(formula, assignments):
         true and satisfiable assignment or false if unsatisfiable
     """
     if formula == []:
-        return SAT, assignments
+        return SAT, sorted(assignments, key=lambda x: abs(x))
     elif [] in formula:
         return UNSAT
     # unit propagation

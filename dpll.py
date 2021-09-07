@@ -1,10 +1,36 @@
 import sys
-import utils
 
 
 SAT = True
 UNSAT = False
 
+
+def parse(dimacs_file):
+    """
+    given:
+        path to dimacs cnf file
+    return:
+        formula: represented as list of list of ints
+    """
+    formula = []
+    clause = []
+    for line in open(dimacs_file):
+        if not line:
+            continue
+        if line[0] in "cp":
+            continue
+        if int_line := (int(x) for x in line.split()):
+            for lit in int_line:
+                if lit == 0:
+                    if clause:
+                        formula.append(clause)
+                    clause = []
+                elif lit != 0:
+                    clause.append(lit)
+    if clause:
+        formula.append(clause)
+    return formula
+    
 
 def get_units(formula):
     """
@@ -114,6 +140,7 @@ def dpll(formula, assignments):
         return dpll(formula+[[lit]], assignments | set([lit])) or dpll(formula+[[-lit]], assignments | set([-lit]))
     return dpll(formula, assignments)
 
+
 if __name__ == "__main__":
     tests = [
         ("sat_aim-50-1_6-yes1-4.cnf", SAT),
@@ -132,10 +159,12 @@ if __name__ == "__main__":
         ("unsat_maf.cnf", UNSAT)
     ]
     for (dimacs_file, sat) in tests:
-        formula = utils.parse("tests/" + dimacs_file)
-        sat = dpll(formula, set())
-        if sat:
-            sat, assignment = sat
-            print(f"{dimacs_file}: {sat}\n\t{list(assignment)}\n")
+        formula = parse("tests/" + dimacs_file)
+        result = dpll(formula, set())
+        print(dimacs_file)
+        if result:
+            res, assignment = result
+            print(f"SAT {' '.join(str(x) for x in assignment)}\n")
         else:
-            print(f"{dimacs_file}: {sat}\n")
+            print("UNSAT\n")
+        assert (bool(result) == sat)

@@ -32,18 +32,18 @@ def parse(dimacs_file):
     return formula
     
 
-def get_units(formula):
+def unit_literals(formula):
     """
     given: 
         formula: list of clauses
     returns:
         set of unit literals
     """
-    units = []
+    units = set()
     for clause in formula:
         if len(clause) == 1:
-            units.append(clause[0])
-    return set(units)
+            units.add(clause[0])
+    return units
 
 
 def unit_propagation(formula, lit):
@@ -65,7 +65,7 @@ def unit_propagation(formula, lit):
     return modified_formula
 
 
-def get_pures(formula):
+def pure_literals(formula):
     """
     given:
         formula
@@ -118,26 +118,29 @@ def dpll(formula, assignments):
     return:
         true and satisfiable assignment or false if unsatisfiable
     """
+    #formula =[ [-2,3], [-4,-3,-5]]
+    # unit_literals(formula) = {1, 6}
     if formula == []:
         return SAT, sorted(assignments, key=lambda x: abs(x))
     elif [] in formula:
         return UNSAT
     # unit propagation
-    units = get_units(formula)
+    units = unit_literals(formula)
     assignments |= units
     for lit in units:
         formula = unit_propagation(formula, lit)
-    if formula == [[]]: 
+    if [] in formula:
         return UNSAT
     # pure literal elimination
-    pures = get_pures(formula)
+    pures = pure_literals(formula)
     assignments |= pures
     for lit in pures:
         formula = pure_literal_elimination(formula, lit)
     # choose a literal
     lit = choose_literal(formula)
     if lit:
-        return dpll(formula+[[lit]], assignments | set([lit])) or dpll(formula+[[-lit]], assignments | set([-lit]))
+        return dpll(formula+[[lit]], assignments|set([lit])) or \
+               dpll(formula+[[-lit]], assignments|set([-lit]))
     return dpll(formula, assignments)
 
 

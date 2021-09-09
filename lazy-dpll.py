@@ -135,20 +135,31 @@ def dpll(formula, assignment, variable_map):
 
 if __name__ == "__main__":
     tests = [
+        ("sat_aim-50-1_6-yes1-4.cnf", SAT),
         ("sat_choueiry.cnf", SAT),
         ("sat_quinn.cnf", SAT),
+        ("sat_jgalenson.cnf", SAT),
         ("sat_simple_v3_c2.cnf", SAT),
-        ("unsat_simple.cnf", UNSAT),
+        ("sat_sukrutrao.cnf", SAT),
+        ("sat_zebra_v155_c1135.cnf", SAT),
+        ("unsat_aim-100-1_6-no-1.cnf", UNSAT),
+        # ("unsat_bf0432-007.cnf", UNSAT),
+        ("unsat_dubois20.cnf", UNSAT),
+        ("unsat_dubois21.cnf", UNSAT),
+        ("unsat_dubois22.cnf", UNSAT),
+        ("unsat_hole6.cnf", UNSAT),
         ("unsat_maf.cnf", UNSAT)
     ]
     for (dimacs_file, sat) in tests:
         raw_formula = parse("tests/" + dimacs_file)
         formula, assignment, variable_map = setup(raw_formula)
         res = dpll(formula, assignment, variable_map)
+        print(dimacs_file)
         if res:
             sat, assignment = res
             for var in variable_map:
                 i = variable_map[var]
                 assignment[i] *= var
             print(assignment)
-        print(res)
+        else:
+            print(res)

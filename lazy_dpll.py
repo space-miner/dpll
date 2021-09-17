@@ -107,7 +107,7 @@ def unit_propagation(formula, units, variable_map, assignment):
                 for lit in clause:                  # ref_a starts at the front of the clause and works backwards
                     var = abs(lit)
                     i = variable_map[var]
-                    if assignment[i] == lit//var:   # true literal 
+                    if assignment[i] == lit:   # true literal 
                         break
                     elif assignment[i] == 0:        # unassigned literal
                         ref_a = lit
@@ -119,7 +119,7 @@ def unit_propagation(formula, units, variable_map, assignment):
                 for lit in clause[::-1]:            # ref_b starts from the back of the clause and works forward
                     var = abs(lit)
                     i = variable_map[var]
-                    if assignment[i] == lit//var:   # true literal 
+                    if assignment[i] == lit:   # true literal 
                         break
                     elif assignment[i] == 0:        # unassigned literal
                         ref_b = lit
@@ -144,7 +144,7 @@ def assign_units(units, variable_map, assignment):
     for lit in units:
         var = abs(lit)
         i = variable_map[var]
-        assignment[i] = lit//var
+        assignment[i] = lit
     return assignment
 
 

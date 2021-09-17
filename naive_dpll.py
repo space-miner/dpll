@@ -1,8 +1,5 @@
-import sys
-
-
-SAT = True
-UNSAT = False
+SATISFIABLE = True
+UNSATISFIABLE = False
 
 
 def parse(dimacs_file):
@@ -15,6 +12,8 @@ def parse(dimacs_file):
     formula = []
     clause = []
     for line in open(dimacs_file):
+        if line[0] == '%':
+            break
         if not line:
             continue
         if line[0] in "cp":
@@ -30,7 +29,22 @@ def parse(dimacs_file):
     if clause:
         formula.append(clause)
     return formula
-    
+
+
+def is_satisfiable(formula):
+    return formula == []
+
+
+def is_unsatisfiable(formula):
+    return any(clause == [] for clause in formula)
+     
+
+def is_consistent(literals):
+    for lit in literals:
+        if -lit in literals:
+            return False
+    return True
+
 
 def unit_literals(formula):
     """
@@ -57,11 +71,9 @@ def unit_propagation(formula, lit):
     for clause in formula:
         if lit in clause:
             continue
-        elif -lit in clause:
+        else:
             modified_clause = [x for x in clause if x != -lit]
             modified_formula.append(modified_clause)
-        else:
-            modified_formula.append(clause)
     return modified_formula
 
 
@@ -111,26 +123,28 @@ def choose_literal(formula):
     return None
 
 
-def dpll(formula, assignments):
+def dpll(formula, assignments=set()):
     """
     given:
         formula
     return:
         true and satisfiable assignment or false if unsatisfiable
     """
-    #formula =[ [-2,3], [-4,-3,-5]]
-    # unit_literals(formula) = {1, 6}
-    if formula == []:
-        return SAT, sorted(assignments, key=lambda x: abs(x))
-    elif [] in formula:
-        return UNSAT
+    if is_satisfiable(formula):
+        return SATISFIABLE, sorted(assignments, key=lambda x: abs(x))
+    elif is_unsatisfiable(formula):
+        return UNSATISFIABLE
     # unit propagation
     units = unit_literals(formula)
-    assignments |= units
-    for lit in units:
-        formula = unit_propagation(formula, lit)
-    if [] in formula:
-        return UNSAT
+    while units:
+        if not is_consistent(units):
+            return UNSATISFIABLE
+        assignments |= units
+        for lit in units:
+            formula = unit_propagation(formula, lit)
+        if is_unsatisfiable(formula):
+            return UNSATISFIABLE
+        units = unit_literals(formula)
     # pure literal elimination
     pures = pure_literals(formula)
     assignments |= pures
@@ -142,32 +156,3 @@ def dpll(formula, assignments):
         return dpll(formula+[[lit]], assignments|set([lit])) or \
                dpll(formula+[[-lit]], assignments|set([-lit]))
     return dpll(formula, assignments)
-
-
-if __name__ == "__main__":
-    tests = [
-        ("sat_aim-50-1_6-yes1-4.cnf", SAT),
-        ("sat_choueiry.cnf", SAT),
-        ("sat_quinn.cnf", SAT),
-        ("sat_jgalenson.cnf", SAT),
-        ("sat_simple_v3_c2.cnf", SAT),
-        ("sat_sukrutrao.cnf", SAT),
-        ("sat_zebra_v155_c1135.cnf", SAT),
-        ("unsat_aim-100-1_6-no-1.cnf", UNSAT),
-        # ("unsat_bf0432-007.cnf", UNSAT),
-        ("unsat_dubois20.cnf", UNSAT),
-        ("unsat_dubois21.cnf", UNSAT),
-        ("unsat_dubois22.cnf", UNSAT),
-        ("unsat_hole6.cnf", UNSAT),
-        ("unsat_maf.cnf", UNSAT)
-    ]
-    for (dimacs_file, sat) in tests:
-        formula = parse("tests/" + dimacs_file)
-        result = dpll(formula, set())
-        print(dimacs_file)
-        if result:
-            res, assignment = result
-            print(f"SAT {' '.join(str(x) for x in assignment)}\n")
-        else:
-            print("UNSAT\n")
-        assert (bool(result) == sat)

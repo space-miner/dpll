@@ -2,7 +2,7 @@ What are SAT Solvers and why care?
 - given a propositional formula (made from conjunction, disjunction, negation of variables), can tell you if it's satisfiable or not. and if it is give the correct assignment.
 - SAT can derive a satisfying propositional backbone for some theories, all theory solvers need to do is some procedure to verify them against
 - modern SAT solvers are fast.
-- used as part of the machinery that powers smt solvers
+- used as part of the machinery that powers SMT solvers
 
 SMT Solver
 - automated theorem provers
